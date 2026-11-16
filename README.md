@@ -1,110 +1,156 @@
 # DataCo Supply Chain Analytics Dashboard
 
-A Django dashboard for exploring DataCo supply-chain performance, delivery risk, logistics, order forecasts, and individual order records.
+A web-based analytics dashboard built with Django to explore supply chain operations, delivery performance, logistics, and order trends using the DataCo dataset.
 
-## Project structure
+The project brings together data analysis and web development to make supply chain information easier to explore, understand, and manage.
 
-- `config/` — Django project configuration.
-- `dashboard/` — dashboard views, models, forms, URLs, migrations, and CSV import command.
-- `templates/dashboard/` — dashboard and record-management templates.
-- `static/` — project static assets (currently empty; Django static collection is configured).
-- `data/processed/` — processed DataCo source data and analysis extracts.
-- `data/forecasts/` — delivery-risk predictions and order-forecast outputs.
+## Overview
 
-The project includes the source CSV (180,519 records). The local SQLite database and Windows virtual environment are deliberately excluded. The database is created from migrations and populated from the included CSV.
+The dashboard provides an interactive way to examine supply chain performance and work with individual order records.
 
-## Runtime
+It covers:
 
-- Python 3.12.7 or another Python 3.12+ version supported by the host.
-- Django 6.1.3 (the version used to generate the included migration).
-- Other dependencies are listed in `requirements.txt`.
+- Supply chain and order performance
+- Delivery risk analysis
+- Logistics and shipping information
+- Order forecasting
+- Individual order record management
 
-## Run locally on Windows
+The application uses the DataCo supply chain dataset, containing approximately 180,519 records.
 
-Open Command Prompt in the folder containing `manage.py`.
+## Technology Stack
 
-1. Create a virtual environment:
+- **Backend:** Python, Django
+- **Database:** SQLite
+- **Data processing:** Python and CSV
+- **Frontend:** HTML, CSS, JavaScript and Django templates
+- **Analytics:** Supply chain analysis and forecasting outputs
 
-   ```bat
-   py -3.12 -m venv .venv
-   ```
+## Project Structure
 
-2. Activate it:
+```text
+Dataco_Django_Dashboard/
+│
+├── config/                 # Django project configuration
+├── dashboard/              # Application logic, models and views
+├── templates/               # Dashboard templates
+├── static/                  # Static assets
+├── data/
+│   ├── processed/           # Processed supply chain data
+│   └── forecasts/           # Forecasting and prediction outputs
+├── manage.py
+├── requirements.txt
+└── README.md
+```
 
-   ```bat
-   .venv\Scripts\activate
-   ```
+## Getting Started
 
-3. Install the project dependencies:
+### Requirements
 
-   ```bat
-   python -m pip install -r requirements.txt
-   ```
+- Python 3.12 or a compatible version
+- pip
+- Git (if cloning the repository)
 
-4. Copy `.env.example` to `.env`.
-5. Generate a new Django secret key:
+### Installation
 
-   ```bat
-   python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
-   ```
+Clone the repository:
 
-6. Put the generated key in `.env` as `DJANGO_SECRET_KEY`. Keep `.env` private; it is excluded by `.gitignore`.
-7. Create the database tables:
+```bash
+git clone https://github.com/YOUR-USERNAME/Dataco-Django-Dashboard.git
+```
 
-   ```bat
-   python manage.py migrate
-   ```
+Move into the project directory:
 
-8. Import the DataCo records:
+```bash
+cd Dataco-Django-Dashboard
+```
 
-   ```bat
-   python manage.py import_dataco
-   ```
+Create a virtual environment:
 
-9. Start the development server:
+```bash
+python -m venv .venv
+```
 
-   ```bat
-   python manage.py runserver
-   ```
-
-Open `http://127.0.0.1:8000/`.
-
-To create a staff account for record management:
+Activate it on Windows:
 
 ```bat
+.venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Environment Configuration
+
+Copy `.env.example` to `.env` and configure the Django environment variables.
+
+Generate a new secret key:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+Add the generated value to `.env` as `DJANGO_SECRET_KEY`.
+
+Keep your `.env` file private.
+
+### Database Setup
+
+Run the migrations:
+
+```bash
+python manage.py migrate
+```
+
+Import the DataCo dataset:
+
+```bash
+python manage.py import_dataco
+```
+
+### Run the Application
+
+Start the local development server:
+
+```bash
+python manage.py runserver
+```
+
+Open the dashboard at:
+
+http://127.0.0.1:8000/
+
+To create an administrator account:
+
+```bash
 python manage.py createsuperuser
 ```
 
-The dashboard pages are public. Adding, editing, and deleting records require a staff account.
+Dashboard pages are publicly accessible. Staff permissions are required for adding, editing, and deleting records.
 
-## Push this project to GitHub
+## Dataset
 
-Create an empty repository on GitHub. Extract this ZIP, open a terminal in the extracted `Dataco_Django_Dashboard` folder (the folder containing `manage.py`), then run:
+The project includes the DataCo supply chain CSV dataset with approximately 180,519 records.
 
-```bash
-git init
-git add .
-git status
-git commit -m "Prepare DataCo dashboard for deployment"
-git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
-git push -u origin main
-```
+Main dataset:
 
-Replace the remote URL with your actual GitHub repository URL. Review `git status` before committing. Do not add `.env`, `db.sqlite3`, or a virtual environment.
+`data/processed/DataCo_SupplyChain.csv`
 
-**Large dataset note:** `data/processed/DataCo_SupplyChain.csv` is approximately 78.7 MB. It is below GitHub's 100 MB per-file hard limit, but GitHub will warn about files above 50 MB. Use Git from your computer to push the repository; do not use the GitHub browser's file uploader for this project.
+The dataset is approximately 78.7 MB.
 
-## PythonAnywhere (after GitHub)
+## Deployment
 
-After the GitHub push is complete, clone the repository into PythonAnywhere. Create a virtual environment using a Python version supported by your account, install `requirements.txt`, configure the WSGI file, set production environment variables, run migrations, import the CSV, run `collectstatic`, and configure the `/static/` mapping in the PythonAnywhere web app.
+The application is prepared for deployment using PythonAnywhere. Production configuration requires environment variables, database setup, static-file configuration, and the Django WSGI application.
 
-For the live site, configure these variables outside GitHub:
+Production secrets and database files should not be committed to the repository.
 
-- `DJANGO_SECRET_KEY` — a new, private production key.
-- `DJANGO_DEBUG=False`.
-- `DJANGO_ALLOWED_HOSTS=YOUR-USERNAME.pythonanywhere.com`.
-- `DJANGO_CSRF_TRUSTED_ORIGINS=https://YOUR-USERNAME.pythonanywhere.com`.
-- `DJANGO_SECURE_SSL_REDIRECT=True`.
+## Author
 
-Do not commit production secrets or the production SQLite database to GitHub.
+**Rotimi Omosewo**
+
+GitHub: https://github.com/rotimi2020
+
+Portfolio: https://rotimi2020.github.io
