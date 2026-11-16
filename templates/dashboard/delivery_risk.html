@@ -1,0 +1,399 @@
+
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATACO | Delivery Risk Analysis</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #202938;
+        }
+
+        header {
+            background: #142b4a;
+            color: white;
+            padding: 24px 5%;
+        }
+
+        header h1 { margin: 0; font-size: 25px; }
+
+        header p {
+            color: #cbd5e1;
+            margin: 7px 0 0;
+            font-size: 14px;
+        }
+
+        main {
+            width: 90%;
+            max-width: 1400px;
+            margin: 30px auto;
+        }
+
+        .top-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .heading h2 {
+            margin: 0 0 7px;
+            font-size: 25px;
+        }
+
+        .heading p {
+            color: #64748b;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .section-title {
+            margin: 30px 0 15px;
+            font-size: 18px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 22px;
+        }
+
+        .kpi-card, .chart-card, .matrix-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
+        }
+
+        .kpi-card { padding: 20px; }
+
+        .kpi-card p {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .kpi-card h3 {
+            margin: 0;
+            color: #142b4a;
+            font-size: 25px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            padding: 22px;
+            min-width: 0;
+        }
+
+        .chart-card h3, .matrix-card h3 {
+            margin: 0 0 18px;
+            font-size: 17px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 330px;
+            width: 100%;
+        }
+
+        .matrix-card {
+            padding: 22px;
+            margin-top: 20px;
+        }
+
+        .matrix-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        th, td {
+            padding: 15px 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #334155;
+            font-size: 13px;
+        }
+
+        td {
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .good { color: #15803d; }
+        .warning { color: #b45309; }
+        .bad { color: #b91c1c; }
+
+        .note {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .chart-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 550px) {
+            main { width: 94%; }
+            .kpi-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>DATACO</h1>
+    <p>Supply Chain Analytics Dashboard</p>
+</header>
+
+<main>
+
+    <a href="{% url 'home' %}" class="top-link">
+        ← Back to Executive Overview
+    </a>
+
+    <section class="heading">
+        <h2>Delivery Risk Analysis</h2>
+        <p>Machine learning model evaluation and late delivery risk predictions.</p>
+    </section>
+
+    <h3 class="section-title">Model Performance Indicators</h3>
+
+    <section class="kpi-grid">
+
+        <div class="kpi-card">
+            <p>Model Accuracy</p>
+            <h3>{{ accuracy|floatformat:1 }}%</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Precision</p>
+            <h3>{{ precision|floatformat:1 }}%</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Recall</p>
+            <h3>{{ recall|floatformat:1 }}%</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>F1 Score</p>
+            <h3>{{ f1_score|floatformat:1 }}%</h3>
+        </div>
+
+    </section>
+
+    <h3 class="section-title">Prediction Summary</h3>
+
+    <section class="kpi-grid">
+
+        <div class="kpi-card">
+            <p>Total Prediction Records</p>
+            <h3>{{ total_predictions|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Actual Late Risk</p>
+            <h3>{{ actual_late|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Predicted Late Risk</p>
+            <h3>{{ predicted_late|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Predicted Not Late</p>
+            <h3>{{ predicted_not_late|intcomma }}</h3>
+        </div>
+
+    </section>
+
+    <h3 class="section-title">Model Evaluation</h3>
+
+    <section class="matrix-card">
+        <h3>Confusion Matrix</h3>
+
+        <div class="matrix-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Actual / Predicted</th>
+                        <th>Predicted Not Late</th>
+                        <th>Predicted Late</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <th>Actually Not Late</th>
+                        <td class="good">{{ true_negative|intcomma }}</td>
+                        <td class="bad">{{ false_positive|intcomma }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Actually Late</th>
+                        <td class="bad">{{ false_negative|intcomma }}</td>
+                        <td class="good">{{ true_positive|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="note">
+            True Positive: correctly predicted late.
+            True Negative: correctly predicted not late.
+            False Positive: predicted late when the actual outcome was not late.
+            False Negative: predicted not late when the actual outcome was late.
+        </p>
+    </section>
+
+    <section class="chart-grid">
+
+        <div class="chart-card">
+            <h3>Prediction Confidence Distribution</h3>
+            <div class="chart-container">
+                <canvas id="confidenceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Predicted Late Items by Shipping Mode</h3>
+            <div class="chart-container">
+                <canvas id="shippingRiskChart"></canvas>
+            </div>
+        </div>
+
+    </section>
+
+    <p class="note">
+        Confidence groups used on this page are Low (&lt;60%),
+        Medium (60% to below 80%) and High (80% or above).
+        These are presentation groupings for the prediction confidence values.
+
+        Model metrics are calculated from the supplied prediction export.
+        The export contains repeated rows, so the figures describe the exported
+        prediction records and have not been deduplicated.
+        They should not be interpreted as a fresh independent validation
+        of the model.
+    </p>
+
+</main>
+
+<footer>
+    DATACO Supply Chain Analytics | Delivery Risk Analysis
+</footer>
+
+{{ confidence_labels|json_script:"confidence-labels" }}
+{{ confidence_values|json_script:"confidence-values" }}
+{{ shipping_labels|json_script:"shipping-labels" }}
+{{ shipping_predictions|json_script:"shipping-predictions" }}
+
+<script>
+    function readData(id) {
+        return JSON.parse(document.getElementById(id).textContent);
+    }
+
+    const confidenceLabels = readData("confidence-labels");
+    const confidenceValues = readData("confidence-values");
+
+    const shippingLabels = readData("shipping-labels");
+    const shippingPredictions = readData("shipping-predictions");
+
+    new Chart(document.getElementById("confidenceChart"), {
+        type: "doughnut",
+        data: {
+            labels: confidenceLabels,
+            datasets: [{
+                data: confidenceValues,
+                backgroundColor: [
+                    "#94a3b8",
+                    "#f59e0b",
+                    "#2563eb"
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "bottom"
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("shippingRiskChart"), {
+        type: "bar",
+        data: {
+            labels: shippingLabels,
+            datasets: [{
+                label: "Predicted Late Records",
+                data: shippingPredictions,
+                backgroundColor: "#2563eb",
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return Number(value).toLocaleString("en-US");
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATACO | Order Volume Forecast</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #202938;
+        }
+
+        header {
+            background: #142b4a;
+            color: white;
+            padding: 24px 5%;
+        }
+
+        header h1 { margin: 0; font-size: 25px; }
+
+        header p {
+            color: #cbd5e1;
+            margin: 7px 0 0;
+            font-size: 14px;
+        }
+
+        main {
+            width: 90%;
+            max-width: 1400px;
+            margin: 30px auto;
+        }
+
+        .top-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .heading h2 {
+            margin: 0 0 7px;
+            font-size: 25px;
+        }
+
+        .heading p {
+            color: #64748b;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .section-title {
+            margin: 30px 0 15px;
+            font-size: 18px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 22px;
+        }
+
+        .kpi-card, .chart-card, .note-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
+        }
+
+        .kpi-card { padding: 20px; }
+
+        .kpi-card p {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .kpi-card h3 {
+            margin: 0;
+            color: #142b4a;
+            font-size: 25px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            padding: 22px;
+            min-width: 0;
+        }
+
+        .chart-card h3 {
+            margin: 0 0 18px;
+            font-size: 17px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 370px;
+            width: 100%;
+        }
+
+        .note-card {
+            padding: 20px;
+            margin-top: 20px;
+            color: #475569;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .note-card strong { color: #142b4a; }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        @media (max-width: 700px) {
+            main { width: 94%; }
+            .kpi-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 300px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>DATACO</h1>
+    <p>Supply Chain Analytics Dashboard</p>
+</header>
+
+<main>
+
+    <a href="{% url 'home' %}" class="top-link">
+        ← Back to Executive Overview
+    </a>
+
+    <section class="heading">
+        <h2>Order Volume Forecast</h2>
+        <p>Comparison of ARIMA order-volume forecasts and model evaluation.</p>
+    </section>
+
+    <h3 class="section-title">Model Evaluation — ARIMA (1,1,1)</h3>
+
+    <section class="kpi-grid">
+
+        <div class="kpi-card">
+            <p>Mean Absolute Error (MAE)</p>
+            <h3>{{ model_111_mae|floatformat:2 }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Mean Absolute Percentage Error (MAPE)</p>
+            <h3>{{ model_111_mape|floatformat:2 }}%</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Root Mean Squared Error (RMSE)</p>
+            <h3>{{ model_111_rmse|floatformat:2 }}</h3>
+        </div>
+
+    </section>
+
+    <h3 class="section-title">Model Evaluation — ARIMA (1,2,1)</h3>
+
+    <section class="kpi-grid">
+
+        <div class="kpi-card">
+            <p>Mean Absolute Error (MAE)</p>
+            <h3>{{ model_121_mae|floatformat:2 }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Mean Absolute Percentage Error (MAPE)</p>
+            <h3>{{ model_121_mape|floatformat:2 }}%</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Root Mean Squared Error (RMSE)</p>
+            <h3>{{ model_121_rmse|floatformat:2 }}</h3>
+        </div>
+
+    </section>
+
+    <h3 class="section-title">12-Month Order Volume Forecast</h3>
+
+    <section class="chart-grid">
+        <div class="chart-card">
+            <h3>Monthly ARIMA Forecast Comparison</h3>
+            <div class="chart-container">
+                <canvas id="forecastChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <h3 class="section-title">Historical Model Evaluation</h3>
+
+    <section class="chart-grid">
+        <div class="chart-card">
+            <h3>Actual vs Predicted Monthly Order Volume</h3>
+            <div class="chart-container">
+                <canvas id="evaluationChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <section class="note-card">
+        <strong>Model comparison:</strong>
+        ARIMA (1,1,1) has the lower MAPE and RMSE in the supplied
+        evaluation metrics. It therefore performed better on these
+        reported error measures.
+
+        <br><br>
+
+        <strong>Forecast period:</strong>
+        February 2018 to January 2019.
+
+        <br><br>
+
+        <strong>Validation limitation:</strong>
+        The supplied evaluation covers seven months, from July 2017
+        to January 2018. Treat the comparison as preliminary rather
+        than proof of long-term forecasting accuracy.
+
+        <br><br>
+
+        <strong>Interpretation:</strong>
+        Forecast values represent estimated monthly order volumes,
+        not confirmed future orders.
+    </section>
+
+</main>
+
+<footer>
+    DATACO Supply Chain Analytics | Order Volume Forecast
+</footer>
+
+{{ forecast_labels|json_script:"forecast-labels" }}
+{{ arima_111_values|json_script:"arima-111-values" }}
+{{ arima_121_values|json_script:"arima-121-values" }}
+
+{{ evaluation_labels|json_script:"evaluation-labels" }}
+{{ evaluation_actual|json_script:"evaluation-actual" }}
+{{ evaluation_111|json_script:"evaluation-111" }}
+{{ evaluation_121|json_script:"evaluation-121" }}
+
+<script>
+    function readData(id) {
+        return JSON.parse(document.getElementById(id).textContent);
+    }
+
+    const forecastLabels = readData("forecast-labels");
+    const forecast111 = readData("arima-111-values");
+    const forecast121 = readData("arima-121-values");
+
+    const evaluationLabels = readData("evaluation-labels");
+    const evaluationActual = readData("evaluation-actual");
+    const evaluation111 = readData("evaluation-111");
+    const evaluation121 = readData("evaluation-121");
+
+    new Chart(document.getElementById("forecastChart"), {
+        type: "line",
+        data: {
+            labels: forecastLabels,
+            datasets: [
+                {
+                    label: "ARIMA (1,1,1)",
+                    data: forecast111,
+                    borderColor: "#2563eb",
+                    backgroundColor: "rgba(37, 99, 235, 0.08)",
+                    borderWidth: 2,
+                    tension: 0.25,
+                    fill: false
+                },
+                {
+                    label: "ARIMA (1,2,1)",
+                    data: forecast121,
+                    borderColor: "#16a34a",
+                    backgroundColor: "rgba(22, 163, 74, 0.08)",
+                    borderWidth: 2,
+                    tension: 0.25,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: "index",
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: "top"
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ": " +
+                                Number(context.parsed.y).toLocaleString(
+                                    "en-US",
+                                    { maximumFractionDigits: 2 }
+                                ) + " orders";
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: "Forecast order volume"
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: "Forecast month"
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("evaluationChart"), {
+        type: "line",
+        data: {
+            labels: evaluationLabels,
+            datasets: [
+                {
+                    label: "Actual Order Volume",
+                    data: evaluationActual,
+                    borderColor: "#142b4a",
+                    borderWidth: 3,
+                    tension: 0.2
+                },
+                {
+                    label: "ARIMA (1,1,1)",
+                    data: evaluation111,
+                    borderColor: "#2563eb",
+                    borderWidth: 2,
+                    tension: 0.2
+                },
+                {
+                    label: "ARIMA (1,2,1)",
+                    data: evaluation121,
+                    borderColor: "#16a34a",
+                    borderWidth: 2,
+                    tension: 0.2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: "index",
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: "top"
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: "Monthly order volume"
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: "Evaluation month"
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

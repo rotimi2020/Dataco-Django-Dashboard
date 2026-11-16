@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }} | DATACO</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f4f7fb; color: #1e293b; }
+        header { background: #102a43; color: white; padding: 22px 5%; }
+        header h1 { margin: 0 0 6px; font-size: 24px; }
+        header p { margin: 0; color: #cbd5e1; }
+        main { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .panel { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 8px #0000000a; }
+        .back { display: inline-block; margin-bottom: 18px; color: #1769aa; text-decoration: none; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .field { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 7px; }
+        input, select { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+        .help { color: #64748b; font-size: 12px; margin-top: 5px; }
+        .errors { color: #b91c1c; font-size: 13px; margin-top: 5px; }
+        .actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+        button, .cancel { padding: 12px 20px; border-radius: 6px; border: 0; text-decoration: none; font-size: 14px; cursor: pointer; }
+        button { background: #1769aa; color: white; font-weight: bold; }
+        .cancel { background: #64748b; color: white; }
+        .notice { background: #eff6ff; color: #1e40af; padding: 12px; border-radius: 6px; margin-bottom: 20px; }
+        @media(max-width: 650px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<header>
+    <h1>DATACO | RECORD MANAGEMENT</h1>
+    <p>Authorised data entry and record updates</p>
+</header>
+
+<main>
+    <a class="back" href="{% url 'data_records' %}">← Back to Data Records</a>
+
+    <div class="panel">
+        <h2>{{ page_title }}</h2>
+        <p>Complete the fields below. Fields marked with an asterisk are required.</p>
+
+        <div class="notice">
+            Only authorised staff can access this form.
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="errors">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="grid">
+                {% for field in form %}
+                    <div class="field">
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}{% if field.field.required %} *{% endif %}
+                        </label>
+
+                        {{ field }}
+
+                        {% if field.help_text %}
+                            <div class="help">{{ field.help_text }}</div>
+                        {% endif %}
+
+                        {% for error in field.errors %}
+                            <div class="errors">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="actions">
+                <button type="submit">{{ button_text }}</button>
+                <a class="cancel" href="{% url 'data_records' %}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

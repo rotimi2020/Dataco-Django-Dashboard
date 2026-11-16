@@ -1,0 +1,494 @@
+
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Records | DATACO</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #1e293b;
+        }
+
+        header {
+            background: #102a43;
+            color: white;
+            padding: 22px 5%;
+        }
+
+        header h1 {
+            margin: 0 0 6px;
+            font-size: 24px;
+        }
+
+        header p {
+            margin: 0;
+            color: #cbd5e1;
+        }
+
+        main {
+            max-width: 1500px;
+            margin: 28px auto;
+            padding: 0 20px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        a { text-decoration: none; }
+        .back { color: #1769aa; }
+
+        .summary, .filters, .table-wrap {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #0000000a;
+        }
+
+        .summary {
+            padding: 18px 20px;
+            margin-bottom: 20px;
+        }
+
+        .summary strong {
+            display: block;
+            font-size: 25px;
+            margin-top: 5px;
+        }
+
+        .filters {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto auto;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        input, select, button {
+            width: 100%;
+            min-width: 0;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button, .add-button {
+            background: #1769aa;
+            color: white;
+            border: 0;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 11px 15px;
+            border-radius: 6px;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .clear {
+            background: #64748b;
+            color: white;
+            padding: 11px 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        /* Main table container */
+        .table-wrap {
+            width: 100%;
+            max-height: 65vh;
+            overflow: auto;
+            border-radius: 10px;
+            overscroll-behavior: contain;
+            scroll-behavior: smooth;
+            scrollbar-width: auto;
+            scrollbar-color: #64748b #e2e8f0;
+        }
+
+        /* Bottom horizontal scrollbar styling */
+        .table-wrap::-webkit-scrollbar {
+            height: 15px;
+            width: 12px;
+        }
+
+        .table-wrap::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        .table-wrap::-webkit-scrollbar-thumb {
+            background: #64748b;
+            border-radius: 10px;
+            border: 3px solid #e2e8f0;
+        }
+
+        .table-wrap::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1550px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        /* Freeze column headings during vertical scrolling */
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: #eaf0f6;
+            color: #334155;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        tr:hover td { background: #f8fafc; }
+
+        .edit {
+            color: #1769aa;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .delete {
+            color: #b91c1c;
+            font-weight: bold;
+        }
+
+        .risk-yes {
+            color: #b91c1c;
+            font-weight: bold;
+        }
+
+        .risk-no {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 20px 0;
+        }
+
+        .page-link {
+            display: inline-block;
+            padding: 9px 14px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            color: #1769aa;
+        }
+
+        .disabled { color: #94a3b8; }
+
+        .empty {
+            padding: 30px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .message {
+            background: #dcfce7;
+            color: #166534;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        @media(max-width: 950px) {
+            .filters { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media(max-width: 520px) {
+            .filters { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>DATACO | DATA RECORDS</h1>
+    <p>Supply Chain Analytics — Search, manage and explore order records</p>
+</header>
+
+<main>
+
+    <div class="topbar">
+        <div>
+            <h2>Supply Chain Data Explorer</h2>
+            <p>Search, filter and inspect order-item records.</p>
+        </div>
+
+        <div>
+            <a class="back" href="{% url 'home' %}">← Executive Overview</a>
+
+            {% if user.is_authenticated and user.is_staff %}
+                &nbsp; | &nbsp;
+                <a class="add-button" href="{% url 'add_record' %}">
+                    + Add New Record
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="summary">
+        <span>Records matching your filters</span>
+        <strong>{{ total_records|intcomma }}</strong>
+    </div>
+
+    <form method="get" class="filters">
+
+        <input
+            type="text"
+            name="search"
+            placeholder="Search product, market, country or order ID"
+            value="{{ search }}"
+        >
+
+        <select name="shipping_mode">
+            <option value="">All shipping modes</option>
+            {% for mode in shipping_modes %}
+                <option value="{{ mode }}" {% if shipping_mode == mode %}selected{% endif %}>
+                    {{ mode }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="delivery_status">
+            <option value="">All delivery statuses</option>
+            {% for status in delivery_statuses %}
+                <option value="{{ status }}" {% if delivery_status == status %}selected{% endif %}>
+                    {{ status }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="late_risk">
+            <option value="">All risk levels</option>
+            <option value="yes" {% if late_risk == "yes" %}selected{% endif %}>
+                Late risk: Yes
+            </option>
+            <option value="no" {% if late_risk == "no" %}selected{% endif %}>
+                Late risk: No
+            </option>
+        </select>
+
+        <button type="submit">Apply Filters</button>
+        <a class="clear" href="{% url 'data_records' %}">Clear</a>
+
+    </form>
+
+    <p style="font-size:13px; color:#64748b; margin-bottom:8px;">
+        Use the horizontal scrollbar at the bottom to view all columns.
+        The column headings remain visible while scrolling vertically.
+    </p>
+
+    <div class="table-wrap" id="tableWrap">
+
+        <table id="recordsTable">
+
+            <thead>
+                <tr>
+                    <th>Order Item ID</th>
+                    <th>Order ID</th>
+                    <th>Order Date</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Department</th>
+                    <th>Market</th>
+                    <th>Country</th>
+                    <th>Shipping Mode</th>
+                    <th>Delivery Status</th>
+                    <th>Late Risk</th>
+                    <th>Quantity</th>
+                    <th>Sales</th>
+                    <th>Profit</th>
+
+                    {% if user.is_authenticated and user.is_staff %}
+                        <th>Action</th>
+                    {% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for record in page_obj %}
+                    <tr>
+                        <td>{{ record.order_item_id }}</td>
+                        <td>{{ record.order_id }}</td>
+                        <td>{{ record.order_date|date:"d M Y" }}</td>
+                        <td>{{ record.product_name }}</td>
+                        <td>{{ record.category_name }}</td>
+                        <td>{{ record.department_name }}</td>
+                        <td>{{ record.market }}</td>
+                        <td>{{ record.order_country }}</td>
+                        <td>{{ record.shipping_mode }}</td>
+                        <td>{{ record.delivery_status }}</td>
+
+                        <td>
+                            {% if record.late_delivery_risk %}
+                                <span class="risk-yes">Yes</span>
+                            {% else %}
+                                <span class="risk-no">No</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ record.order_item_quantity }}</td>
+                        <td>{{ record.sales|floatformat:2|intcomma }}</td>
+                        <td>{{ record.order_profit_per_order|floatformat:2|intcomma }}</td>
+
+                        {% if user.is_authenticated and user.is_staff %}
+                            <td>
+                                <a class="edit"
+                                   href="{% url 'edit_record' record.order_item_id %}">
+                                    Edit
+                                </a>
+
+                                <a class="delete"
+                                   href="{% url 'delete_record' record.order_item_id %}">
+                                    Delete
+                                </a>
+                            </td>
+                        {% endif %}
+                    </tr>
+
+                {% empty %}
+                    <tr>
+                        <td colspan="15" class="empty">
+                            No records found. Try changing your filters.
+                        </td>
+                    </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+
+    </div>
+
+    <div class="pagination">
+
+        <div>
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            — Showing {{ page_obj|length }} records on this page
+        </div>
+
+        <div>
+            {% if page_obj.has_previous %}
+                <a class="page-link"
+                   href="?search={{ search|urlencode }}&shipping_mode={{ shipping_mode|urlencode }}&delivery_status={{ delivery_status|urlencode }}&late_risk={{ late_risk|urlencode }}&page={{ page_obj.previous_page_number }}">
+                    Previous
+                </a>
+            {% else %}
+                <span class="page-link disabled">Previous</span>
+            {% endif %}
+
+            {% if page_obj.has_next %}
+                <a class="page-link"
+                   href="?search={{ search|urlencode }}&shipping_mode={{ shipping_mode|urlencode }}&delivery_status={{ delivery_status|urlencode }}&late_risk={{ late_risk|urlencode }}&page={{ page_obj.next_page_number }}">
+                    Next
+                </a>
+            {% else %}
+                <span class="page-link disabled">Next</span>
+            {% endif %}
+        </div>
+
+    </div>
+
+</main>
+
+<script>
+    const tableWrap = document.getElementById("tableWrap");
+
+    let animationFrame = null;
+    let targetScrollLeft = tableWrap.scrollLeft;
+
+    // Smooth horizontal movement for mouse wheel and trackpad.
+    tableWrap.addEventListener("wheel", function(event) {
+
+        // Only intercept vertical wheel movement.
+        // Native horizontal scrolling remains available.
+        if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+            return;
+        }
+
+        // Only convert the wheel movement when horizontal overflow exists.
+        if (tableWrap.scrollWidth <= tableWrap.clientWidth) {
+            return;
+        }
+
+        event.preventDefault();
+
+        targetScrollLeft += event.deltaY * 0.65;
+
+        targetScrollLeft = Math.max(
+            0,
+            Math.min(
+                targetScrollLeft,
+                tableWrap.scrollWidth - tableWrap.clientWidth
+            )
+        );
+
+        if (animationFrame !== null) {
+            cancelAnimationFrame(animationFrame);
+        }
+
+        function animateScroll() {
+            const difference = targetScrollLeft - tableWrap.scrollLeft;
+
+            if (Math.abs(difference) < 0.5) {
+                tableWrap.scrollLeft = targetScrollLeft;
+                animationFrame = null;
+                return;
+            }
+
+            tableWrap.scrollLeft += difference * 0.16;
+
+            animationFrame = requestAnimationFrame(animateScroll);
+        }
+
+        animationFrame = requestAnimationFrame(animateScroll);
+
+    }, { passive: false });
+
+    // Keep the target position in sync when the user drags the scrollbar.
+    tableWrap.addEventListener("scroll", function() {
+        if (animationFrame === null) {
+            targetScrollLeft = tableWrap.scrollLeft;
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,364 @@
+
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATACO | Logistics Performance</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #202938;
+        }
+
+        header {
+            background: #142b4a;
+            color: white;
+            padding: 24px 5%;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 25px;
+        }
+
+        header p {
+            color: #cbd5e1;
+            margin: 7px 0 0;
+            font-size: 14px;
+        }
+
+        main {
+            width: 90%;
+            max-width: 1400px;
+            margin: 30px auto;
+        }
+
+        .top-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .heading h2 {
+            margin: 0 0 7px;
+            font-size: 25px;
+        }
+
+        .heading p {
+            color: #64748b;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .section-title {
+            margin: 30px 0 15px;
+            font-size: 18px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 22px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
+        }
+
+        .kpi-card p {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .kpi-card h3 {
+            margin: 0;
+            color: #142b4a;
+            font-size: 25px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 22px;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
+            min-width: 0;
+        }
+
+        .chart-card h3 {
+            margin: 0 0 18px;
+            font-size: 17px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 330px;
+            width: 100%;
+        }
+
+        .note {
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 550px) {
+            main {
+                width: 94%;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>DATACO</h1>
+    <p>Supply Chain Analytics Dashboard</p>
+</header>
+
+<main>
+
+    <a href="{% url 'home' %}" class="top-link">
+        ← Back to Executive Overview
+    </a>
+
+    <section class="heading">
+        <h2>Logistics Performance</h2>
+        <p>Delivery status, shipping methods and transportation time.</p>
+    </section>
+
+    <h3 class="section-title">Logistics Performance Indicators</h3>
+
+    <section class="kpi-grid">
+
+        <div class="kpi-card">
+            <p>Total Order Items</p>
+            <h3>{{ total_items|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Late Delivery Item Rate</p>
+            <h3>{{ late_rate|floatformat:1 }}%</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Average Actual Shipping Days</p>
+            <h3>{{ average_actual_days|floatformat:2 }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Average Scheduled Shipping Days</p>
+            <h3>{{ average_scheduled_days|floatformat:2 }}</h3>
+        </div>
+
+    </section>
+
+    <h3 class="section-title">Delivery Analysis</h3>
+
+    <section class="chart-grid">
+
+        <div class="chart-card">
+            <h3>Delivery Status Distribution</h3>
+            <div class="chart-container">
+                <canvas id="deliveryStatusChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Order Items by Shipping Mode</h3>
+            <div class="chart-container">
+                <canvas id="shippingModeChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Average Actual Shipping Days by Mode</h3>
+            <div class="chart-container">
+                <canvas id="shippingDaysChart"></canvas>
+            </div>
+        </div>
+
+    </section>
+
+    <p class="note">
+        Figures are calculated from the imported order-item records.
+        Delivery status categories are based on the dataset's
+        Delivery Status field. Average delay is the difference between
+        average actual and scheduled shipping days:
+        {{ average_delay|floatformat:2 }} days.
+    </p>
+
+</main>
+
+<footer>
+    DATACO Supply Chain Analytics | Logistics Performance
+</footer>
+
+{{ delivery_status_labels|json_script:"delivery-status-labels" }}
+{{ delivery_status_counts|json_script:"delivery-status-counts" }}
+{{ shipping_mode_labels|json_script:"shipping-mode-labels" }}
+{{ shipping_mode_counts|json_script:"shipping-mode-counts" }}
+{{ shipping_mode_days|json_script:"shipping-mode-days" }}
+
+<script>
+    const deliveryLabels = JSON.parse(
+        document.getElementById("delivery-status-labels").textContent
+    );
+
+    const deliveryCounts = JSON.parse(
+        document.getElementById("delivery-status-counts").textContent
+    );
+
+    const shippingLabels = JSON.parse(
+        document.getElementById("shipping-mode-labels").textContent
+    );
+
+    const shippingCounts = JSON.parse(
+        document.getElementById("shipping-mode-counts").textContent
+    );
+
+    const shippingDays = JSON.parse(
+        document.getElementById("shipping-mode-days").textContent
+    );
+
+    new Chart(document.getElementById("deliveryStatusChart"), {
+        type: "doughnut",
+        data: {
+            labels: deliveryLabels,
+            datasets: [{
+                data: deliveryCounts,
+                backgroundColor: [
+                    "#2563eb",
+                    "#16a34a",
+                    "#f59e0b"
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "bottom"
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("shippingModeChart"), {
+        type: "bar",
+        data: {
+            labels: shippingLabels,
+            datasets: [{
+                label: "Order Items",
+                data: shippingCounts,
+                backgroundColor: "#2563eb",
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return Number(value).toLocaleString("en-US");
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("shippingDaysChart"), {
+        type: "bar",
+        data: {
+            labels: shippingLabels,
+            datasets: [{
+                label: "Average Actual Days",
+                data: shippingDays,
+                backgroundColor: "#0f766e",
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Days"
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

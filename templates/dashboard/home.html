@@ -1,0 +1,339 @@
+
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATACO | Supply Chain Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #202938;
+        }
+
+        header {
+            background: #142b4a;
+            color: white;
+            padding: 24px 5%;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 25px;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            margin: 7px 0 0;
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        main {
+            width: 90%;
+            max-width: 1400px;
+            margin: 30px auto;
+        }
+
+        .page-heading { margin-bottom: 22px; }
+
+        .page-heading h2 {
+            margin: 0 0 7px;
+            font-size: 24px;
+        }
+
+        .page-heading p {
+            margin: 0;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .section-title {
+            margin: 30px 0 15px;
+            font-size: 18px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 9px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
+        }
+
+        .kpi-card p {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .kpi-card h3 {
+            margin: 0;
+            font-size: 23px;
+            color: #142b4a;
+            overflow-wrap: anywhere;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 22px;
+            border-radius: 9px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
+            margin-top: 20px;
+        }
+
+        .chart-card h3 {
+            margin: 0 0 18px;
+            font-size: 17px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 340px;
+            width: 100%;
+        }
+
+        .page-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .page-card {
+            display: block;
+            background: white;
+            padding: 20px;
+            border-radius: 9px;
+            border: 1px solid #e2e8f0;
+            text-decoration: none;
+            color: #202938;
+            transition: 0.2s ease;
+        }
+
+        .page-card:hover {
+            border-color: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .page-card h3 {
+            margin: 0 0 8px;
+            color: #142b4a;
+            font-size: 16px;
+        }
+
+        .page-card p {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        @media (max-width: 1000px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .page-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 600px) {
+            main { width: 94%; }
+
+            .kpi-grid,
+            .page-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container { height: 280px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>DATACO</h1>
+    <p>Supply Chain Analytics Dashboard</p>
+</header>
+
+<main>
+
+    <section class="page-heading">
+        <h2>Executive Overview</h2>
+        <p>Key business and supply chain performance indicators.</p>
+    </section>
+
+    <h3 class="section-title">Business Performance Summary</h3>
+
+    <section class="kpi-grid">
+
+        <div class="kpi-card">
+            <p>Total Sales</p>
+            <h3>${{ summary.total_sales|floatformat:2|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Total Profit</p>
+            <h3>${{ summary.total_profit|floatformat:2|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Total Orders</p>
+            <h3>{{ summary.total_orders|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Average Order Value</p>
+            <h3>${{ average_order_value|floatformat:2|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Late Delivery Item Rate</p>
+            <h3>{{ late_delivery_rate|floatformat:1 }}%</h3>
+        </div>
+
+    </section>
+
+    <h3 class="section-title">Sales Performance</h3>
+
+    <section class="chart-card">
+        <h3>Monthly Sales Trend</h3>
+        <div class="chart-container">
+            <canvas id="monthlySalesChart"></canvas>
+        </div>
+    </section>
+
+    <h3 class="section-title">Dashboard Sections</h3>
+
+    <section class="page-grid">
+
+        <a href="{% url 'logistics' %}" class="page-card">
+            <h3>Logistics Performance</h3>
+            <p>Analyse shipping methods, delivery time and logistics performance.</p>
+        </a>
+
+        <a href="{% url 'supply_chain' %}" class="page-card">
+            <h3>Supply Chain Performance</h3>
+            <p>Explore sales, profit, products, markets and operational performance.</p>
+        </a>
+
+        <a href="{% url 'delivery_risk' %}" class="page-card">
+            <h3>Delivery Risk Analysis</h3>
+            <p>Examine late delivery risks and machine learning predictions.</p>
+        </a>
+
+        <a href="{% url 'order_forecast' %}" class="page-card">
+            <h3>Order Volume Forecast</h3>
+            <p>Review monthly order forecasts and ARIMA model performance.</p>
+        </a>
+
+        <a href="{% url 'data_records' %}" class="page-card">
+            <h3>Data Records</h3>
+            <p>Explore the supply chain dataset through searchable records.</p>
+        </a>
+
+    </section>
+
+</main>
+
+<footer>
+    DATACO Supply Chain Analytics | Data-driven business insights
+</footer>
+
+{{ monthly_sales_labels|json_script:"monthly-sales-labels" }}
+{{ monthly_sales_values|json_script:"monthly-sales-values" }}
+
+<script>
+    const salesLabels = JSON.parse(
+        document.getElementById("monthly-sales-labels").textContent
+    );
+
+    const salesValues = JSON.parse(
+        document.getElementById("monthly-sales-values").textContent
+    );
+
+    new Chart(document.getElementById("monthlySalesChart"), {
+        type: "line",
+        data: {
+            labels: salesLabels,
+            datasets: [{
+                label: "Monthly Sales",
+                data: salesValues,
+                borderColor: "#2563eb",
+                backgroundColor: "rgba(37, 99, 235, 0.10)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2,
+                pointHoverRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top"
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return "Sales: $" +
+                                Number(context.parsed.y).toLocaleString(
+                                    "en-US",
+                                    {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    }
+                                );
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return "$" + Number(value).toLocaleString("en-US");
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: "Month"
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

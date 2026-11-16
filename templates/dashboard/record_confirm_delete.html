@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Delete | DATACO</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #1e293b;
+        }
+
+        header {
+            background: #102a43;
+            color: white;
+            padding: 22px 5%;
+        }
+
+        header h1 { margin: 0 0 6px; font-size: 24px; }
+        header p { margin: 0; color: #cbd5e1; }
+
+        main {
+            max-width: 650px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 28px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #0000000a;
+        }
+
+        .warning {
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+
+        button, .cancel {
+            padding: 12px 20px;
+            border-radius: 6px;
+            border: 0;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button {
+            background: #b91c1c;
+            color: white;
+            font-weight: bold;
+        }
+
+        .cancel {
+            background: #64748b;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>DATACO | RECORD MANAGEMENT</h1>
+    <p>Confirm record deletion</p>
+</header>
+
+<main>
+    <div class="panel">
+
+        <h2>Delete Record?</h2>
+
+        <div class="warning">
+            <strong>Warning:</strong> You are about to permanently delete this record.
+            This action cannot be undone.
+        </div>
+
+        <p>
+            <strong>Order Item ID:</strong> {{ record.order_item_id }}
+        </p>
+
+        <p>
+            <strong>Order ID:</strong> {{ record.order_id }}
+        </p>
+
+        <p>
+            <strong>Product:</strong> {{ record.product_name }}
+        </p>
+
+        <p>
+            <strong>Country:</strong> {{ record.order_country }}
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="actions">
+                <button type="submit">Yes, Delete Record</button>
+
+                <a class="cancel" href="{% url 'data_records' %}">
+                    Cancel
+                </a>
+            </div>
+        </form>
+
+    </div>
+</main>
+
+</body>
+</html>

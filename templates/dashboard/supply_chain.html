@@ -1,0 +1,400 @@
+
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATACO | Supply Chain Performance</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #202938;
+        }
+
+        header {
+            background: #142b4a;
+            color: white;
+            padding: 24px 5%;
+        }
+
+        header h1 { margin: 0; font-size: 25px; }
+
+        header p {
+            color: #cbd5e1;
+            margin: 7px 0 0;
+            font-size: 14px;
+        }
+
+        main {
+            width: 90%;
+            max-width: 1400px;
+            margin: 30px auto;
+        }
+
+        .top-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .heading h2 {
+            margin: 0 0 7px;
+            font-size: 25px;
+        }
+
+        .heading p {
+            color: #64748b;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .section-title {
+            margin: 30px 0 15px;
+            font-size: 18px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 22px;
+        }
+
+        .kpi-card, .chart-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
+        }
+
+        .kpi-card { padding: 20px; }
+
+        .kpi-card p {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .kpi-card h3 {
+            margin: 0;
+            color: #142b4a;
+            font-size: 23px;
+            overflow-wrap: anywhere;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            padding: 22px;
+            min-width: 0;
+        }
+
+        .chart-card h3 {
+            margin: 0 0 18px;
+            font-size: 17px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 340px;
+            width: 100%;
+        }
+
+        .note {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .chart-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 550px) {
+            main { width: 94%; }
+            .kpi-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>DATACO</h1>
+    <p>Supply Chain Analytics Dashboard</p>
+</header>
+
+<main>
+
+    <a href="{% url 'home' %}" class="top-link">
+        ← Back to Executive Overview
+    </a>
+
+    <section class="heading">
+        <h2>Supply Chain Performance</h2>
+        <p>Sales, profitability, product categories, markets and customer segments.</p>
+    </section>
+
+    <h3 class="section-title">Supply Chain Indicators</h3>
+
+    <section class="kpi-grid">
+
+        <div class="kpi-card">
+            <p>Total Sales</p>
+            <h3>${{ summary.total_sales|floatformat:2|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Total Profit</p>
+            <h3>${{ summary.total_profit|floatformat:2|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Total Orders</p>
+            <h3>{{ summary.total_orders|intcomma }}</h3>
+        </div>
+
+        <div class="kpi-card">
+            <p>Units Ordered</p>
+            <h3>{{ summary.total_quantity|intcomma }}</h3>
+        </div>
+
+    </section>
+
+    <h3 class="section-title">Product and Category Performance</h3>
+
+    <section class="chart-grid">
+
+        <div class="chart-card">
+            <h3>Top 10 Product Categories by Sales</h3>
+            <div class="chart-container">
+                <canvas id="categorySalesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Sales and Profit by Department</h3>
+            <div class="chart-container">
+                <canvas id="departmentChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Sales by Market</h3>
+            <div class="chart-container">
+                <canvas id="marketChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Sales by Customer Segment</h3>
+            <div class="chart-container">
+                <canvas id="segmentChart"></canvas>
+            </div>
+        </div>
+
+    </section>
+
+    <p class="note">
+        Category chart displays the ten highest-sales categories.
+        Other charts show all available markets, departments and customer
+        segments. Values are aggregated from the imported order-item records.
+    </p>
+
+</main>
+
+<footer>
+    DATACO Supply Chain Analytics | Supply Chain Performance
+</footer>
+
+{{ category_labels|json_script:"category-labels" }}
+{{ category_sales|json_script:"category-sales" }}
+{{ category_profit|json_script:"category-profit" }}
+{{ department_labels|json_script:"department-labels" }}
+{{ department_sales|json_script:"department-sales" }}
+{{ department_profit|json_script:"department-profit" }}
+{{ market_labels|json_script:"market-labels" }}
+{{ market_sales|json_script:"market-sales" }}
+{{ segment_labels|json_script:"segment-labels" }}
+{{ segment_sales|json_script:"segment-sales" }}
+
+<script>
+    function readData(id) {
+        return JSON.parse(document.getElementById(id).textContent);
+    }
+
+    const categoryLabels = readData("category-labels");
+    const categorySales = readData("category-sales");
+
+    const departmentLabels = readData("department-labels");
+    const departmentSales = readData("department-sales");
+    const departmentProfit = readData("department-profit");
+
+    const marketLabels = readData("market-labels");
+    const marketSales = readData("market-sales");
+
+    const segmentLabels = readData("segment-labels");
+    const segmentSales = readData("segment-sales");
+
+    const moneyFormat = value => "$" + Number(value).toLocaleString(
+        "en-US",
+        { maximumFractionDigits: 0 }
+    );
+
+    new Chart(document.getElementById("categorySalesChart"), {
+        type: "bar",
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                label: "Sales",
+                data: categorySales,
+                backgroundColor: "#2563eb",
+                borderRadius: 5
+            }]
+        },
+        options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: context => "Sales: " + moneyFormat(context.parsed.x)
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { callback: moneyFormat }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("departmentChart"), {
+        type: "bar",
+        data: {
+            labels: departmentLabels,
+            datasets: [
+                {
+                    label: "Sales",
+                    data: departmentSales,
+                    backgroundColor: "#2563eb"
+                },
+                {
+                    label: "Profit",
+                    data: departmentProfit,
+                    backgroundColor: "#16a34a"
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: context => context.dataset.label + ": " +
+                            moneyFormat(context.parsed.y)
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: moneyFormat }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("marketChart"), {
+        type: "bar",
+        data: {
+            labels: marketLabels,
+            datasets: [{
+                label: "Sales",
+                data: marketSales,
+                backgroundColor: "#0f766e",
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: context => "Sales: " + moneyFormat(context.parsed.y)
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: moneyFormat }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("segmentChart"), {
+        type: "doughnut",
+        data: {
+            labels: segmentLabels,
+            datasets: [{
+                data: segmentSales,
+                backgroundColor: [
+                    "#2563eb",
+                    "#16a34a",
+                    "#f59e0b"
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: "bottom" },
+                tooltip: {
+                    callbacks: {
+                        label: context => context.label + ": " +
+                            moneyFormat(context.parsed)
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
