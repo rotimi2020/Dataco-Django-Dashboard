@@ -114,6 +114,17 @@ DATABASES = {
 }
 
 
+# Small in-process cache for analytics pages on the single-worker host.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "dataco-dashboard-cache",
+        "TIMEOUT": 300,
+        "OPTIONS": {"MAX_ENTRIES": 100},
+    }
+}
+
+
 # ---------------------------------------------------------------------
 # Password validation
 # ---------------------------------------------------------------------
