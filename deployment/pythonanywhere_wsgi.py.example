@@ -1,0 +1,14 @@
+# Copy this into the WSGI configuration editor on PythonAnywhere.
+# Replace YOUR-PYTHONANYWHERE-USERNAME with your actual account username.
+
+import os
+import sys
+
+project_home = "/home/YOUR-PYTHONANYWHERE-USERNAME/Dataco-Django-Dashboard"
+if project_home not in sys.path:
+    sys.path.insert(0, project_home)
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
