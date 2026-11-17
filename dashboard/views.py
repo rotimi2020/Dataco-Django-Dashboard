@@ -6,6 +6,8 @@ from pathlib import Path
 
 from django.conf import settings
 from django.shortcuts import render
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from django.db.models import Sum, Count, Q, Avg, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 
@@ -19,6 +21,8 @@ def read_csv_file(filename):
         return list(csv.DictReader(file))
 
 
+@cache_page(300)
+@vary_on_cookie
 def home(request):
     money_field = DecimalField(max_digits=15, decimal_places=2)
 
@@ -76,6 +80,8 @@ def home(request):
     return render(request, "dashboard/home.html", context)
 
 
+@cache_page(300)
+@vary_on_cookie
 def logistics(request):
     total_items = SupplyChainRecord.objects.count()
 
@@ -157,6 +163,8 @@ def logistics(request):
     return render(request, "dashboard/logistics.html", context)
 
 
+@cache_page(300)
+@vary_on_cookie
 def supply_chain(request):
     money_field = DecimalField(max_digits=15, decimal_places=2)
 
@@ -255,6 +263,8 @@ def supply_chain(request):
     return render(request, "dashboard/supply_chain.html", context)
 
 
+@cache_page(300)
+@vary_on_cookie
 def delivery_risk(request):
     rows = read_csv_file("Late_Delivery_Predictions.csv")
 
@@ -357,6 +367,8 @@ def delivery_risk(request):
     return render(request, "dashboard/delivery_risk.html", context)
 
 
+@cache_page(300)
+@vary_on_cookie
 def order_forecast(request):
     forecast_rows = read_csv_file("Order_Volume_Forecast.csv")
     evaluation_rows = read_csv_file("Order_Volume_Model_Evaluation.csv")
